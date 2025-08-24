@@ -1,55 +1,57 @@
-// Nama cache untuk PWA kita.
-// PENTING: Ganti nomor versi ini (misal, v2, v3) setiap kali Anda mengubah file di dalam urlsToCache.
-const CACHE_NAME = 'checklist-kebersihan-cache-v2';
+// Nama cache unik untuk aplikasi kebersihan.
+const CACHE_NAME = 'kebersihan-aps-cache-v1';
 
-// Daftar lengkap file yang akan disimpan di cache untuk mode offline
-const urlsToCache = [
+// Daftar lengkap file yang akan disimpan di cache.
+const URLS_TO_CACHE = [
   '/',
-  '/index.html',
-  '/favicon/apple-touch-icon.png',
-  '/favicon/favicon-96x96.png',
-  '/favicon/favicon.ico',
-  '/favicon/favicon.svg',
-  '/favicon/site.webmanifest',
-  '/favicon/web-app-manifest-192x192.png',
-  '/favicon/web-app-manifest-512x512.png'
+  'index.html',
+  
+  // File dari dalam folder 'favicon'
+  'favicon/site.webmanifest',
+  'favicon/favicon.ico',
+  'favicon/favicon.svg',
+  'favicon/apple-touch-icon.png',
+  'favicon/favicon-96x96.png',
+  'favicon/web-app-manifest-192x192.png',
+  'favicon/web-app-manifest-512x512.png',
+
+  // File eksternal (CDN) yang digunakan
+  'https://cdn.tailwindcss.com',
+  'https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap',
+  'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js',
+  'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js',
+  'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js'
 ];
 
-// Event listener untuk proses 'install' Service Worker
-self.addEventListener('install', event => {
+// Event 'install': Menyimpan file ke cache.
+self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME)
-    .then(cache => {
-      console.log('Cache dibuka dan file ditambahkan');
-      return cache.addAll(urlsToCache);
+    .then((cache) => {
+      console.log('Cache dibuka, menambahkan file inti aplikasi kebersihan');
+      return cache.addAll(URLS_TO_CACHE);
     })
   );
 });
 
-// Event listener untuk setiap request 'fetch'
-self.addEventListener('fetch', event => {
+// Event 'fetch': Menyajikan file dari cache jika offline.
+self.addEventListener('fetch', (event) => {
   event.respondWith(
     caches.match(event.request)
-    .then(response => {
-      // Jika request ada di cache, kembalikan dari cache
-      if (response) {
-        return response;
-      }
-      // Jika tidak ada, fetch dari network
-      return fetch(event.request);
+    .then((response) => {
+      return response || fetch(event.request);
     })
   );
 });
 
-// Event listener untuk 'activate', membersihkan cache lama
-self.addEventListener('activate', event => {
+// Event 'activate': Membersihkan cache lama.
+self.addEventListener('activate', (event) => {
   const cacheWhitelist = [CACHE_NAME];
   event.waitUntil(
-    caches.keys().then(cacheNames => {
+    caches.keys().then((cacheNames) => {
       return Promise.all(
-        cacheNames.map(cacheName => {
+        cacheNames.map((cacheName) => {
           if (cacheWhitelist.indexOf(cacheName) === -1) {
-            // Hapus semua cache yang tidak sama dengan CACHE_NAME terbaru
             return caches.delete(cacheName);
           }
         })
