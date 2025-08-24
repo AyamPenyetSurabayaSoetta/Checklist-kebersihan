@@ -582,15 +582,6 @@
         searchInput.addEventListener('input', () => {
             const searchTerm = searchInput.value.toLowerCase().trim();
             let resultsFound = 0;
-            if ('serviceWorker' in navigator) {
-    window.addEventListener('load', () => {
-        navigator.serviceWorker.register('/sw.js').then(registration => {
-            console.log('ServiceWorker berhasil didaftarkan: ', registration);
-        }).catch(registrationError => {
-            console.log('Pendaftaran ServiceWorker gagal: ', registrationError);
-        });
-    });
-}
 
             document.querySelectorAll('#daftar-tugas-grid .task-card').forEach(card => {
                 const isVisible = card.dataset.taskText.toLowerCase().includes(searchTerm);
@@ -608,6 +599,17 @@
         });
     });
 </script>
-
+<!-- Skrip untuk mendaftarkan Service Worker -->
+<script>
+    if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+            navigator.serviceWorker.register('/sw.js').then(registration => {
+                console.log('Service Worker Kebersihan berhasil didaftarkan:', registration);
+            }).catch(error => {
+                console.log('Pendaftaran Service Worker Kebersihan gagal:', error);
+            });
+        });
+    }
+</script>
 </body>
 </html>
