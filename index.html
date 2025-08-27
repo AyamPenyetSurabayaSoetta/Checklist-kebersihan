@@ -4,12 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Aplikasi Kebersihan</title>
-<link rel="manifest" href="favicon/site.webmanifest">
-
+    <link rel="manifest" href="favicon/site.webmanifest">
     <meta name="theme-color" content="#3b82f6">
-
     <link rel="apple-touch-icon" href="favicon/apple-touch-icon.png">
-
     <link rel="icon" type="image/png" sizes="96x96" href="favicon/favicon-96x96.png">
     <link rel="icon" type="image/x-icon" href="favicon/favicon.ico">
     <script src="https://cdn.tailwindcss.com"></script>
@@ -20,39 +17,11 @@
         .task-card { transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out; }
         .task-card:hover { transform: translateY(-5px); box-shadow: 0 8px 25px rgba(0,0,0,0.08); }
         .modal { transition: opacity 0.3s ease; }
-
-/* CSS untuk Animasi Bouncing Loader */
-.bouncing-loader {
-    display: flex;
-    justify-content: center;
-    width: 100px;
-}
-
-.bouncing-loader > div {
-    width: 16px;
-    height: 16px;
-    margin: 3px 6px;
-    border-radius: 50%;
-    background-color: #3b82f6; /* Warna biru, bisa diganti */
-    animation: bouncing-loader 1.4s infinite ease-in-out both;
-}
-
-.bouncing-loader > div:nth-child(1) {
-    animation-delay: -0.32s;
-}
-
-.bouncing-loader > div:nth-child(2) {
-    animation-delay: -0.16s;
-}
-
-@keyframes bouncing-loader {
-    0%, 80%, 100% {
-        transform: scale(0);
-    }
-    40% {
-        transform: scale(1.0);
-    }
-}
+        .bouncing-loader { display: flex; justify-content: center; width: 100px; }
+        .bouncing-loader > div { width: 16px; height: 16px; margin: 3px 6px; border-radius: 50%; background-color: #3b82f6; animation: bouncing-loader 1.4s infinite ease-in-out both; }
+        .bouncing-loader > div:nth-child(1) { animation-delay: -0.32s; }
+        .bouncing-loader > div:nth-child(2) { animation-delay: -0.16s; }
+        @keyframes bouncing-loader { 0%, 80%, 100% { transform: scale(0); } 40% { transform: scale(1.0); } }
     </style>
 </head>
 <body class="text-slate-800">
@@ -61,10 +30,23 @@
 
         <div id="checklist-view">
             <header class="mb-8">
-                <h1 class="text-4xl font-extrabold text-slate-900">Checklist Kebersihan</h1>
+                <h1 id="main-title" class="text-4xl font-extrabold text-slate-900">Checklist Kebersihan</h1>
                 <p class="text-lg text-slate-500 mt-1">Ayam Penyet Surabaya Soetta</p>
             </header>
 
+            <div id="history-view-controls" class="mb-8 p-4 bg-white rounded-2xl shadow-sm border border-slate-200">
+                <label for="history-date-input" class="block text-sm font-semibold text-slate-600 mb-2">Lihat Laporan Tanggal Lain:</label>
+                <div class="flex flex-col sm:flex-row gap-2">
+                    <input type="date" id="history-date-input" class="w-full sm:flex-grow bg-slate-50 border border-slate-300 text-slate-700 px-3 py-2 rounded-lg focus:ring-2 focus:ring-blue-400 focus:outline-none">
+                    <button id="view-history-btn" class="bg-blue-600 text-white font-semibold py-2 px-5 rounded-lg hover:bg-blue-700 transition duration-200">
+                        Lihat Riwayat
+                    </button>
+                    <button id="back-to-today-btn" class="bg-slate-600 text-white font-semibold py-2 px-5 rounded-lg hover:bg-slate-700 transition duration-200 hidden">
+                        &larr; Kembali ke Hari Ini
+                    </button>
+                </div>
+            </div>
+          
             <div class="mb-8">
                 <div class="relative">
                     <input type="text" id="search-input" placeholder="Cari tugas..." class="w-full bg-white text-lg pl-12 pr-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-blue-400 focus:outline-none shadow-sm">
@@ -80,7 +62,7 @@
                  <div class="flex justify-between items-center mb-2">
                     <h2 class="text-xl font-bold text-slate-700">Progress Harian</h2>
                     <p id="progress-text" class="font-semibold text-blue-600">0%</p>
-                </div>
+                 </div>
                 <div class="w-full bg-slate-200 rounded-full h-3">
                     <div id="progress-bar" class="bg-gradient-to-r from-cyan-400 to-blue-500 h-3 rounded-full progress-bar-fill" style="width: 0%"></div>
                 </div>
@@ -88,7 +70,7 @@
             </div>
 
             <div>
-                <h2 class="text-2xl font-bold text-slate-800 mb-4">Tugas Hari Ini</h2>
+                <h2 id="tugas-title" class="text-2xl font-bold text-slate-800 mb-4">Tugas Hari Ini</h2>
                 <div id="daftar-tugas-grid" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6"></div>
             </div>
 
@@ -106,7 +88,7 @@
                 </div>
                 <div>
                     <button id="show-ranking-btn" class="bg-white text-blue-600 border border-blue-300 font-semibold py-2 px-6 rounded-lg hover:bg-blue-50 transition duration-200 shadow-sm">
-                        🏆 Lihat Ranking
+                        👑 Lihat Ranking
                     </button>
                 </div>
             </div>
@@ -133,13 +115,13 @@
     </main>
 
    <div id="loading-overlay" class="fixed inset-0 bg-white/80 backdrop-blur-sm flex flex-col items-center justify-center z-[70]">
-    <div class="bouncing-loader">
-        <div></div>
-        <div></div>
-        <div></div>
+        <div class="bouncing-loader">
+            <div></div>
+            <div></div>
+            <div></div>
+        </div>
+        <p class="text-slate-600 font-semibold mt-4">Memuat data...</p>
     </div>
-    <p class="text-slate-600 font-semibold mt-4">Memuat data...</p>
-</div>
 
     <div id="task-modal" class="modal fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-[60] hidden opacity-0">
         <div class="bg-white rounded-2xl shadow-xl p-6 max-w-md w-full">
@@ -189,7 +171,7 @@
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
     import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
     import { getFirestore, doc, onSnapshot, setDoc, updateDoc, getDoc, Timestamp, collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-
+    
     // --- KONFIGURASI ---
     const firebaseConfig = {
         apiKey: "AIzaSyDqvDqNWOu80VwrtJCnUgPewztWXDEx52o",
@@ -203,16 +185,76 @@
     const CLOUDINARY_CLOUD_NAME = "dvriessnn";
     const CLOUDINARY_UPLOAD_PRESET = "mwpukgzc";
     const CLOUDINARY_API_URL = `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/image/upload`;
-
+    
     // --- INISIALISASI ---
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
     const db = getFirestore(app);
+    // Letakkan fungsi ini di dalam <script type="module">
 
+/**
+ * Membuat daftar yang dioptimalkan dengan virtual scrolling.
+ * @param {HTMLElement} container - Elemen div yang akan menampung daftar.
+ * @param {Array} fullData - Array lengkap dari semua data yang akan ditampilkan.
+ * @param {Function} renderItemFunction - Fungsi yang menerima satu item data dan mengembalikan string HTML-nya.
+ */
+function createVirtualScroller(container, fullData, renderItemFunction) {
+    container.innerHTML = ''; // Kosongkan container
+    if (fullData.length === 0) {
+        container.innerHTML = `<p class="text-center text-slate-500 bg-slate-50 p-4 rounded-lg">Belum ada tugas yang selesai.</p>`;
+        return;
+    }
+
+    const itemHeight = 100; // Perkiraan tinggi satu item dalam piksel. Sesuaikan jika perlu.
+    const batchSize = 15; // Jumlah item yang akan dirender sekaligus.
+    let currentIndex = 0;
+
+    const sentinel = document.createElement('div');
+    container.appendChild(sentinel);
+
+    const renderBatch = () => {
+        const batch = fullData.slice(currentIndex, currentIndex + batchSize);
+        if (batch.length === 0) {
+            if(observer) observer.unobserve(sentinel);
+            return;
+        }
+        
+        const fragment = document.createDocumentFragment();
+        batch.forEach(item => {
+            const itemWrapper = document.createElement('div');
+            // renderItemFunction mengembalikan string, jadi kita set innerHTML
+            itemWrapper.innerHTML = renderItemFunction(item);
+            // appendChild hanya mengambil elemen pertama dari hasil innerHTML
+            fragment.appendChild(itemWrapper.firstElementChild);
+        });
+        
+        container.insertBefore(fragment, sentinel);
+        currentIndex += batchSize;
+    };
+
+    const observer = new IntersectionObserver((entries) => {
+        if (entries[0].isIntersecting) {
+            renderBatch();
+        }
+    }, { rootMargin: `${itemHeight * 3}px` }); 
+
+    observer.observe(sentinel);
+}
+
+    
     // --- SEMUA ELEMEN DOM ---
     const checklistView = document.getElementById('checklist-view');
     const rankingView = document.getElementById('ranking-view');
     const loadingOverlay = document.getElementById('loading-overlay');
+    const historyControls = document.getElementById('history-view-controls');
+    const historyDateInput = document.getElementById('history-date-input');
+    const viewHistoryBtn = document.getElementById('view-history-btn');
+    const backToTodayBtn = document.getElementById('back-to-today-btn');
+    const mainTitle = document.getElementById('main-title');
+    const tugasTitle = document.getElementById('tugas-title');
+    const archiveBtnContainer = document.querySelector('.mt-10.pt-6.border-t');
+
+    let isViewingHistory = false; // Variabel untuk melacak state tampilan
 
     // ===========================================
     // BAGIAN 1: FUNGSI UNTUK CHECKLIST
@@ -231,7 +273,7 @@
     };
     const TASK_ICONS = {
         default: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12.22 2h-4.44a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8.88z"></path><path d="M15 2v5h5"></path></svg>`,
-        sapu: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19.4 12.3C21.2 10.7 21.2 8 20 6.8a2.5 2.5 0 0 0-3.5 0L12 11.3V4.5A1.5 1.5 0 0 0 10.5 3h-1A1.5 1.5 0 0 0 8 4.5v13.2c0 1.2 1.3 1.8 2.3.9l6.1-5.3z"/></svg>`,
+        sapu: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19.4 12.3C21.2 10.7 21.2 8 20 6.8a2.5 2.5 0 0 0-3.5 0L12 11.3V4.5A1.5 1.5 0 0 0 10.5 3h-1A1.5 1.5 0 0 0 8 4.5v13.2c0 1.2 1.3 1.8 2.3 .9l6.1-5.3z"/></svg>`,
         pel: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 22h20"/><path d="M5 22V6.5c0-.8.7-1.5 1.5-1.5s1.5.7 1.5 1.5V22"/><path d="M12 22V5c0-1.7-1.3-3-3-3s-3 1.3-3 3v17"/><path d="M17 22V9.5c0-.8.7-1.5 1.5-1.5s1.5.7 1.5 1.5V22"/></svg>`,
         lap: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22h8.5a.5.5 0 0 0 .5-.5V3.5a.5.5 0 0 0-.5-.5H3.5a.5.5 0 0 0-.5.5v12.5c0 .3.2.5.5.5h3"/><path d="m12 16-1-3 4-4 1 3-4 4z"/></svg>`,
         toilet: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 21v-4H8v-2h2v-2h2v2h2v2h-2v4h-4Z"/><path d="M6 13h12c.5 0 1-.5 1-1V6c0-1-1-2-2-2H7c-1 0-2 1-2 2v6c0 .5.5 1 1 1Z"/></svg>`,
@@ -248,7 +290,6 @@
         ember: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m5 5 1.5 10.5a2.5 2.5 0 0 0 2.5 2h7a2.5 2.5 0 0 0 2.5-2L20 5"/><path d="M5 5h14"/><path d="M15 5a3 3 0 0 0-6 0"/></svg>`,
         tangga: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 5H2L12 15l10-10z"/><path d="M2 12h20"/><path d="M2 19h20"/></svg>`,
     };
-
     const getIconForTask = (id) => {
         if (id.includes('sapu')) return TASK_ICONS.sapu;
         if (id.includes('pel')) return TASK_ICONS.pel;
@@ -270,12 +311,10 @@
     };
 
     const getTanggalString = (date) => `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
-
     const showAlert = (message) => {
         document.getElementById('custom-alert-message').textContent = message;
         document.getElementById('custom-alert').classList.remove('hidden');
     };
-
     const showConfirm = (message, callback) => {
         const modal = document.getElementById('custom-confirm');
         document.getElementById('custom-confirm-message').textContent = message;
@@ -284,58 +323,87 @@
         modal.querySelector('#custom-confirm-cancel').onclick = () => { callback(false); modal.classList.add('hidden'); };
     };
 
-    const renderChecklistUI = (data) => {
-        const gridContainer = document.getElementById('daftar-tugas-grid');
-        const completedContainer = document.getElementById('tugas-selesai-list');
-        gridContainer.innerHTML = '';
-        completedContainer.innerHTML = '';
-        let tugasSelesai = 0;
-        if (!data || !data.tasks) return;
-        const allTasks = Object.entries(data.tasks);
-        const totalTugas = allTasks.length;
+// Ganti fungsi renderChecklistUI Anda dengan yang ini
+const renderChecklistUI = (data) => {
+    const gridContainer = document.getElementById('daftar-tugas-grid');
+    const completedContainer = document.getElementById('tugas-selesai-list');
+    
+    // Kosongkan container sebelum diisi
+    gridContainer.innerHTML = '';
+    completedContainer.innerHTML = ''; // Dikelola oleh virtual scroller
 
-        allTasks.forEach(([id, task]) => {
-            if (task.done) {
-                tugasSelesai++;
-                const completedItem = document.createElement('div');
-                completedItem.className = "bg-white border border-slate-200 p-4 rounded-xl shadow-sm flex items-center justify-between gap-4";
-                completedItem.innerHTML = `
-                    <div class="flex items-center gap-3">
-                        <div class="w-12 h-12 rounded-lg object-cover bg-slate-100 flex items-center justify-center">
-                            <img src="${task.proofUrl}" alt="Bukti" class="w-full h-full rounded-lg object-cover cursor-pointer" data-full-src="${task.proofUrl}">
-                        </div>
-                        <div>
-                            <p class="font-semibold text-slate-800">${task.text}</p>
-                            <p class="text-sm text-slate-500">Oleh: ${task.completedBy}</p>
-                        </div>
-                    </div>
-                    <div class="flex-shrink-0 text-emerald-500">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
-                    </div>
-                `;
-                completedContainer.appendChild(completedItem);
-            } else {
-                const card = document.createElement('div');
-                card.className = "task-card bg-white p-4 rounded-2xl shadow-md border border-slate-200 flex flex-col items-center justify-center text-center cursor-pointer aspect-square";
-                card.dataset.taskId = id;
-                card.dataset.taskText = task.text;
-                card.innerHTML = `
-                    <div class="text-blue-500 mb-2">${getIconForTask(id)}</div>
-                    <p class="font-semibold text-slate-700 leading-tight">${task.text}</p>
-                `;
-                gridContainer.appendChild(card);
-            }
-        });
+    let tugasSelesaiCount = 0;
+    if (!data || !data.tasks) return;
 
-        if(completedContainer.innerHTML === '') {
-            completedContainer.innerHTML = `<p class="text-center text-slate-500 bg-slate-50 p-4 rounded-lg">Belum ada tugas yang selesai.</p>`
+    const allTasks = Object.entries(data.tasks);
+    const totalTugas = allTasks.length;
+
+    const uncompletedTasks = [];
+    const completedTasks = [];
+
+    // Pisahkan tugas yang sudah dan belum selesai
+    allTasks.forEach(([id, task]) => {
+        if (task.done) {
+            completedTasks.push({ id, ...task });
+        } else {
+            uncompletedTasks.push({ id, ...task });
         }
+    });
 
-        const progress = totalTugas > 0 ? (tugasSelesai / totalTugas) * 100 : 0;
-        document.getElementById('progress-bar').style.width = `${progress}%`;
-        document.getElementById('progress-text').textContent = `${Math.round(progress)}%`;
+    // 1. Render tugas yang BELUM selesai (seperti biasa, karena jumlahnya sedikit)
+    uncompletedTasks.forEach(task => {
+        const card = document.createElement('div');
+        card.className = "task-card bg-white p-4 rounded-2xl shadow-md border border-slate-200 flex flex-col items-center justify-center text-center cursor-pointer aspect-square";
+        card.dataset.taskId = task.id;
+        card.dataset.taskText = task.text;
+        card.innerHTML = `
+            <div class="text-blue-500 mb-2">${getIconForTask(task.id)}</div>
+            <p class="font-semibold text-slate-700 leading-tight">${task.text}</p>
+        `;
+        gridContainer.appendChild(card);
+    });
+
+    // 2. Render tugas yang SUDAH selesai MENGGUNAKAN VIRTUAL SCROLLER
+    const renderSingleCompletedItem = (task) => {
+        const staffFeedbackHtml = `
+            ${task.isChecked || task.staffComment ? `
+            <div class="mt-3 pt-3 border-t border-slate-200 space-y-2">
+                ${task.isChecked ? `<div class="flex items-center gap-2 text-sm font-semibold text-green-600 bg-green-50 px-3 py-1.5 rounded-lg"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg><span>Sudah Dicek oleh Staff</span></div>` : ''}
+                ${task.staffComment ? `<div class="text-sm text-slate-600 bg-slate-50 p-3 rounded-lg"><p class="font-semibold mb-1 text-slate-800">Komentar Staff:</p><p class="italic">"${task.staffComment}"</p></div>` : ''}
+            </div>` : ''}
+        `;
+
+        return `
+        <div class="bg-white border border-slate-200 p-4 rounded-xl shadow-sm flex flex-col gap-2">
+            <div class="flex items-center justify-between gap-4">
+                <div class="flex items-center gap-3">
+                    <div class="w-12 h-12 rounded-lg object-cover bg-slate-100 flex items-center justify-center flex-shrink-0">
+                        <img src="${task.proofUrl}" alt="Bukti" class="w-full h-full rounded-lg object-cover cursor-pointer" data-full-src="${task.proofUrl}" loading="lazy">
+                    </div>
+                    <div>
+                        <p class="font-semibold text-slate-800">${task.text}</p>
+                        <p class="text-sm text-slate-500">Oleh: ${task.completedBy}</p>
+                    </div>
+                </div>
+                <div class="flex-shrink-0 text-emerald-500">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+                </div>
+            </div>
+            ${staffFeedbackHtml}
+        </div>
+        `;
     };
 
+    createVirtualScroller(completedContainer, completedTasks, renderSingleCompletedItem);
+
+    // 3. Update progress bar
+    tugasSelesaiCount = completedTasks.length;
+    const progress = totalTugas > 0 ? (tugasSelesaiCount / totalTugas) * 100 : 0;
+    document.getElementById('progress-bar').style.width = `${progress}%`;
+    document.getElementById('progress-text').textContent = `${Math.round(progress)}%`;
+};
+
+    
     const archiveChecklist = async (date) => {
         const dateStr = getTanggalString(date);
         const dailyDocRef = doc(db, 'checklist_harian', dateStr);
@@ -356,7 +424,7 @@
         const todayDocRef = doc(db, 'checklist_harian', todayStr);
         let tasks = {};
         for (const [id, taskInfo] of Object.entries(DAFTAR_TUGAS_DEFAULT)) {
-            tasks[id] = { ...taskInfo, done: false, proofUrl: null, completedBy: null };
+            tasks[id] = { ...taskInfo, done: false, proofUrl: null, completedBy: null, isChecked: false, staffComment: '' };
         }
         await setDoc(todayDocRef, { tanggal: todayStr, tasks });
     };
@@ -367,7 +435,6 @@
         const taskId = form.querySelector('#task-modal-id').value;
         const namaPengerja = form.querySelector('input[name="namaPengerja"]').value.trim();
         const file = form.querySelector('input[name="fileBukti"]').files[0];
-
         if (!namaPengerja || !file) {
             showAlert("Nama dan foto bukti harus diisi.");
             return;
@@ -376,7 +443,6 @@
         const submitButton = form.querySelector('button[type="submit"]');
         submitButton.disabled = true;
         submitButton.innerHTML = `<svg class="animate-spin mx-auto h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>`;
-
         const formData = new FormData();
         formData.append('file', file);
         formData.append('upload_preset', CLOUDINARY_UPLOAD_PRESET);
@@ -402,6 +468,31 @@
         }
     };
 
+    const fetchAndDisplayHistory = async (dateStr) => {
+        if (!dateStr) {
+            showAlert("Silakan pilih tanggal terlebih dahulu.");
+            return;
+        }
+        isViewingHistory = true;
+        loadingOverlay.style.display = 'flex';
+        mainTitle.textContent = `Laporan ${new Date(dateStr.replace(/-/g, '/')).toLocaleDateString('id-ID', {day: 'numeric', month: 'long', year: 'numeric'})}`;
+        tugasTitle.textContent = "Tugas yang Belum Selesai";
+        viewHistoryBtn.classList.add('hidden');
+        backToTodayBtn.classList.remove('hidden');
+        archiveBtnContainer.classList.add('hidden');
+        const historyDocRef = doc(db, 'checklist_history', dateStr);
+        const docSnap = await getDoc(historyDocRef);
+        if (docSnap.exists()) {
+            renderChecklistUI(docSnap.data());
+        } else {
+            document.getElementById('daftar-tugas-grid').innerHTML = '';
+            document.getElementById('tugas-selesai-list').innerHTML = `<p class="text-center text-slate-500 bg-slate-50 p-4 rounded-lg">Tidak ada laporan yang diarsipkan untuk tanggal ini.</p>`;
+            document.getElementById('progress-bar').style.width = '0%';
+            document.getElementById('progress-text').textContent = '0%';
+        }
+        loadingOverlay.style.display = 'none';
+    };
+    
     // ===========================================
     // BAGIAN 2: FUNGSI UNTUK RANKING
     // ===========================================
@@ -431,7 +522,6 @@
                     });
                 }
             });
-
             const sortedUsers = Object.entries(userScores)
                 .map(([name, score]) => ({ name, score }))
                 .sort((a, b) => b.score - a.score);
@@ -445,7 +535,7 @@
     };
 
     const renderRanking = (sortedUsers) => {
-        rankingListContainer.innerHTML = ''; 
+        rankingListContainer.innerHTML = '';
         if (sortedUsers.length === 0) {
             rankingListContainer.innerHTML = `<p class="text-center text-slate-500 bg-white p-6 rounded-lg shadow-sm">Belum ada data untuk ditampilkan.</p>`;
             return;
@@ -475,20 +565,21 @@
         const todayStr = getTanggalString(new Date());
         document.getElementById('tanggal-hari-ini').textContent = new Date().toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
 
-        // --- Inisialisasi Aplikasi ---
         try {
             await signInAnonymously(auth);
             const dailyDocRef = doc(db, 'checklist_harian', todayStr);
             onSnapshot(dailyDocRef, async (doc) => {
-                if (!doc.exists()) {
-                    const yesterday = new Date();
-                    yesterday.setDate(yesterday.getDate() - 1);
-                    await archiveChecklist(yesterday);
-                    await createTodayChecklist(todayStr);
-                } else {
-                    renderChecklistUI(doc.data());
+                if (!isViewingHistory) { 
+                    if (!doc.exists()) {
+                        const yesterday = new Date();
+                        yesterday.setDate(yesterday.getDate() - 1);
+                        await archiveChecklist(yesterday);
+                        await createTodayChecklist(todayStr);
+                    } else {
+                        renderChecklistUI(doc.data());
+                    }
+                    loadingOverlay.style.display = 'none';
                 }
-                loadingOverlay.style.display = 'none';
             }, (error) => {
                 loadingOverlay.innerHTML = '<p class="text-red-500 font-semibold">Gagal terhubung ke database.</p>';
             });
@@ -497,25 +588,20 @@
         }
 
         // --- Listener untuk navigasi ---
-        const showRankingBtn = document.getElementById('show-ranking-btn');
-        const backToCeklisBtn = document.getElementById('back-to-checklist-btn');
-
-        showRankingBtn.addEventListener('click', () => {
+        document.getElementById('show-ranking-btn').addEventListener('click', () => {
             checklistView.classList.add('hidden');
             rankingView.classList.remove('hidden');
             document.querySelector('.filter-btn[data-range="7"]').click();
         });
-
-        backToCeklisBtn.addEventListener('click', () => {
+        document.getElementById('back-to-checklist-btn').addEventListener('click', () => {
             rankingView.classList.add('hidden');
             checklistView.classList.remove('hidden');
         });
-
+        
         // --- Listener untuk filter ranking ---
-        const filterButtons = document.querySelectorAll('.filter-btn');
-        filterButtons.forEach(button => {
+        document.querySelectorAll('.filter-btn').forEach(button => {
             button.addEventListener('click', () => {
-                filterButtons.forEach(btn => {
+                document.querySelectorAll('.filter-btn').forEach(btn => {
                     btn.classList.remove('bg-blue-500', 'text-white');
                     btn.classList.add('bg-slate-200', 'text-slate-700');
                 });
@@ -524,7 +610,7 @@
                 getRankingData(parseInt(button.dataset.range, 10));
             });
         });
-
+        
         // --- Listener untuk fitur checklist ---
         document.getElementById('daftar-tugas-grid').addEventListener('click', (e) => {
             const card = e.target.closest('.task-card');
@@ -535,7 +621,6 @@
                 modal.classList.remove('hidden', 'opacity-0');
             }
         });
-
         document.getElementById('tugas-selesai-list').addEventListener('click', (e) => {
              const thumbnail = e.target.closest('img[data-full-src]');
              if (thumbnail) {
@@ -546,14 +631,12 @@
         });
 
         document.getElementById('task-action-form').addEventListener('submit', handleFormSubmit);
-
         document.getElementById('task-modal-cancel').addEventListener('click', () => {
              const modal = document.getElementById('task-modal');
              modal.classList.add('hidden', 'opacity-0');
              document.getElementById('task-action-form').reset();
              document.getElementById('file-name-display').textContent = '';
         });
-
         document.getElementById('archive-now-btn').addEventListener('click', () => {
             showConfirm("Anda yakin ingin menyelesaikan dan mengarsipkan laporan hari ini?", async (confirmed) => {
                 if (confirmed) {
@@ -564,7 +647,6 @@
                 }
             });
         });
-
         document.getElementById('custom-alert-close').addEventListener('click', () => document.getElementById('custom-alert').classList.add('hidden'));
 
         const fileInput = document.getElementById('file-input');
@@ -575,31 +657,49 @@
             const file = e.target.files[0];
             fileNameDisplay.textContent = file ? `File: ${file.name}` : '';
         });
-
         const searchInput = document.getElementById('search-input');
         const noResultsMessage = document.getElementById('no-results-message');
-
         searchInput.addEventListener('input', () => {
             const searchTerm = searchInput.value.toLowerCase().trim();
             let resultsFound = 0;
-
             document.querySelectorAll('#daftar-tugas-grid .task-card').forEach(card => {
                 const isVisible = card.dataset.taskText.toLowerCase().includes(searchTerm);
                 card.style.display = isVisible ? 'flex' : 'none';
                 if(isVisible) resultsFound++;
             });
-
             document.querySelectorAll('#tugas-selesai-list .bg-white').forEach(item => {
                 const isVisible = item.querySelector('.font-semibold').textContent.toLowerCase().includes(searchTerm);
                 item.style.display = isVisible ? 'flex' : 'none';
                 if(isVisible) resultsFound++;
             });
-
             noResultsMessage.classList.toggle('hidden', resultsFound > 0 || searchTerm === '');
+        });
+
+        // --- Listener untuk fitur riwayat ---
+        viewHistoryBtn.addEventListener('click', () => {
+            const selectedDate = historyDateInput.value;
+            fetchAndDisplayHistory(selectedDate);
+        });
+        backToTodayBtn.addEventListener('click', () => {
+            isViewingHistory = false;
+            loadingOverlay.style.display = 'flex';
+            mainTitle.textContent = "Checklist Kebersihan";
+            tugasTitle.textContent = "Tugas Hari Ini";
+            viewHistoryBtn.classList.remove('hidden');
+            backToTodayBtn.classList.add('hidden');
+            archiveBtnContainer.classList.remove('hidden');
+            historyDateInput.value = '';
+            const todayStr = getTanggalString(new Date());
+            const dailyDocRef = doc(db, 'checklist_harian', todayStr);
+            getDoc(dailyDocRef).then(docSnap => {
+                if (docSnap.exists()) {
+                    renderChecklistUI(docSnap.data());
+                }
+            });
+            loadingOverlay.style.display = 'none';
         });
     });
 </script>
-<!-- Skrip untuk mendaftarkan Service Worker -->
 <script>
     if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => {
