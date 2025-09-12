@@ -69,6 +69,13 @@
                  <p id="tanggal-hari-ini" class="text-sm text-slate-500 mt-3 text-center"></p>
             </div>
 
+            <div class="mb-8">
+                <h3 class="text-xl font-bold text-slate-700 mb-3">Pemberitahuan Terbaru</h3>
+                <div id="notification-list" class="space-y-2 bg-white p-4 rounded-xl border border-slate-200 max-h-48 overflow-y-auto">
+                    <p class="text-slate-400 text-center">Belum ada pemberitahuan.</p>
+                </div>
+            </div>
+
             <div>
                 <h2 id="tugas-title" class="text-2xl font-bold text-slate-800 mb-4">Tugas Hari Ini</h2>
                 <div id="daftar-tugas-grid" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6"></div>
@@ -88,7 +95,7 @@
                 </div>
                 <div>
                     <button id="show-ranking-btn" class="bg-white text-blue-600 border border-blue-300 font-semibold py-2 px-6 rounded-lg hover:bg-blue-50 transition duration-200 shadow-sm">
-                        👑 Lihat Ranking
+                        Lihat Ranking
                     </button>
                 </div>
             </div>
@@ -125,32 +132,21 @@
 
     <div id="task-modal" class="modal fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-[60] hidden opacity-0">
         <div class="bg-white rounded-2xl shadow-xl p-6 max-w-md w-full">
-            <h3 id="task-modal-title" class="text-2xl font-bold text-slate-800 mb-6 text-center">Judul Tugas</h3>
+            <h3 id="task-modal-title" class="text-2xl font-bold text-slate-800 mb-6 text-center">Selesaikan Tugas</h3>
             <form id="task-action-form" class="space-y-4">
                 <input type="hidden" id="task-modal-id">
                 <div>
                     <label class="font-semibold text-slate-600 mb-1 block">Nama Lengkap Anda</label>
                     <input type="text" name="namaPengerja" placeholder="Masukkan nama..." required class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-400 focus:outline-none">
                 </div>
-                <div>
-                    <label class="font-semibold text-slate-600 mb-1 block">Foto Bukti</label>
-                    <input type="file" name="fileBukti" id="file-input" accept="image/*" class="hidden" required>
-                    <button type="button" id="upload-btn" class="w-full bg-blue-500 text-white font-semibold py-3 px-4 rounded-lg hover:bg-blue-600 flex items-center justify-center gap-2">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"></path><circle cx="12" cy="13" r="3"></circle></svg>
-                        Pilih Foto atau Buka Kamera
-                    </button>
-                    <p id="file-name-display" class="text-sm text-slate-500 mt-2 text-center"></p>
-                </div>
                 <div class="flex gap-4 pt-4">
                     <button type="button" id="task-modal-cancel" class="w-full bg-slate-200 font-semibold py-3 px-4 rounded-lg hover:bg-slate-300">Batal</button>
-                    <button type="submit" class="w-full bg-emerald-500 text-white font-semibold py-3 px-4 rounded-lg hover:bg-emerald-600">Kirim Bukti</button>
+                    <button type="submit" class="w-full bg-emerald-500 text-white font-semibold py-3 px-4 rounded-lg hover:bg-emerald-600">Kerjakan</button>
                 </div>
             </form>
         </div>
     </div>
-    <div id="image-modal" class="modal fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 z-[60] hidden opacity-0" onclick="this.classList.add('hidden', 'opacity-0')">
-        <img id="modal-image-content" src="" alt="Bukti Foto" class="max-w-full max-h-full rounded-lg shadow-2xl">
-    </div>
+    
     <div id="custom-alert" class="modal fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-[60] hidden">
         <div class="bg-white rounded-lg shadow-xl p-6 max-w-sm w-full text-center">
             <p id="custom-alert-message" class="text-slate-700 mb-4"></p>
@@ -182,83 +178,60 @@
         appId: "1:378595640412:web:c18e3ccde798cad320d299",
         measurementId: "G-Z67FJLC8X3"
     };
-    const CLOUDINARY_CLOUD_NAME = "dvriessnn";
-    const CLOUDINARY_UPLOAD_PRESET = "mwpukgzc";
-    const CLOUDINARY_API_URL = `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/image/upload`;
     
     // --- INISIALISASI ---
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
     const db = getFirestore(app);
-    // Letakkan fungsi ini di dalam <script type="module">
 
-/**
- * Membuat daftar yang dioptimalkan dengan virtual scrolling.
- * @param {HTMLElement} container - Elemen div yang akan menampung daftar.
- * @param {Array} fullData - Array lengkap dari semua data yang akan ditampilkan.
- * @param {Function} renderItemFunction - Fungsi yang menerima satu item data dan mengembalikan string HTML-nya.
- */
-function createVirtualScroller(container, fullData, renderItemFunction) {
-    container.innerHTML = ''; // Kosongkan container
-    if (fullData.length === 0) {
-        container.innerHTML = `<p class="text-center text-slate-500 bg-slate-50 p-4 rounded-lg">Belum ada tugas yang selesai.</p>`;
-        return;
-    }
-
-    const itemHeight = 100; // Perkiraan tinggi satu item dalam piksel. Sesuaikan jika perlu.
-    const batchSize = 15; // Jumlah item yang akan dirender sekaligus.
-    let currentIndex = 0;
-
-    const sentinel = document.createElement('div');
-    container.appendChild(sentinel);
-
-    const renderBatch = () => {
-        const batch = fullData.slice(currentIndex, currentIndex + batchSize);
-        if (batch.length === 0) {
-            if(observer) observer.unobserve(sentinel);
+    // --- FUNGSI VIRTUAL SCROLLER ---
+    function createVirtualScroller(container, fullData, renderItemFunction) {
+        container.innerHTML = '';
+        if (fullData.length === 0) {
+            container.innerHTML = `<p class="text-center text-slate-500 bg-slate-50 p-4 rounded-lg">Belum ada tugas yang selesai.</p>`;
             return;
         }
-        
-        const fragment = document.createDocumentFragment();
-        batch.forEach(item => {
-            const itemWrapper = document.createElement('div');
-            // renderItemFunction mengembalikan string, jadi kita set innerHTML
-            itemWrapper.innerHTML = renderItemFunction(item);
-            // appendChild hanya mengambil elemen pertama dari hasil innerHTML
-            fragment.appendChild(itemWrapper.firstElementChild);
-        });
-        
-        container.insertBefore(fragment, sentinel);
-        currentIndex += batchSize;
-    };
-
-    const observer = new IntersectionObserver((entries) => {
-        if (entries[0].isIntersecting) {
-            renderBatch();
-        }
-    }, { rootMargin: `${itemHeight * 3}px` }); 
-
-    observer.observe(sentinel);
-}
-
+        const sentinel = document.createElement('div');
+        container.appendChild(sentinel);
+        let currentIndex = 0;
+        const batchSize = 15;
+        const renderBatch = () => {
+            const batch = fullData.slice(currentIndex, currentIndex + batchSize);
+            if (batch.length === 0) {
+                if(observer) observer.unobserve(sentinel);
+                return;
+            }
+            const fragment = document.createDocumentFragment();
+            batch.forEach(item => {
+                const itemWrapper = document.createElement('div');
+                itemWrapper.innerHTML = renderItemFunction(item);
+                fragment.appendChild(itemWrapper.firstElementChild);
+            });
+            container.insertBefore(fragment, sentinel);
+            currentIndex += batchSize;
+        };
+        const observer = new IntersectionObserver((entries) => {
+            if (entries[0].isIntersecting) {
+                renderBatch();
+            }
+        }, { rootMargin: `300px` }); 
+        observer.observe(sentinel);
+    }
     
-    // --- SEMUA ELEMEN DOM ---
+    // --- ELEMEN DOM & STATE ---
     const checklistView = document.getElementById('checklist-view');
     const rankingView = document.getElementById('ranking-view');
     const loadingOverlay = document.getElementById('loading-overlay');
-    const historyControls = document.getElementById('history-view-controls');
     const historyDateInput = document.getElementById('history-date-input');
     const viewHistoryBtn = document.getElementById('view-history-btn');
     const backToTodayBtn = document.getElementById('back-to-today-btn');
     const mainTitle = document.getElementById('main-title');
     const tugasTitle = document.getElementById('tugas-title');
     const archiveBtnContainer = document.querySelector('.mt-10.pt-6.border-t');
+    let isViewingHistory = false;
+    let currentTasks = {}; // Menyimpan state tugas terakhir untuk perbandingan notifikasi
 
-    let isViewingHistory = false; // Variabel untuk melacak state tampilan
-
-    // ===========================================
-    // BAGIAN 1: FUNGSI UNTUK CHECKLIST
-    // ===========================================
+    // --- DATA & KONSTANTA ---
     const DAFTAR_TUGAS_DEFAULT = {
         sapu_lantai1: { text: "Sapu lantai 1" }, sapu_lantai2: { text: "Sapu lantai 2" },
         pel_lantai1: { text: "Pel seluruh lantai 1" }, pel_lantai2: { text: "Pel seluruh lantai 2" },
@@ -273,43 +246,18 @@ function createVirtualScroller(container, fullData, renderItemFunction) {
     };
     const TASK_ICONS = {
         default: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12.22 2h-4.44a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8.88z"></path><path d="M15 2v5h5"></path></svg>`,
-        sapu: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19.4 12.3C21.2 10.7 21.2 8 20 6.8a2.5 2.5 0 0 0-3.5 0L12 11.3V4.5A1.5 1.5 0 0 0 10.5 3h-1A1.5 1.5 0 0 0 8 4.5v13.2c0 1.2 1.3 1.8 2.3 .9l6.1-5.3z"/></svg>`,
+        sapu: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19.4 12.3C21.2 10.7 21.2 8 20 6.8a2.5 2.5 0 0 0-3.5 0L12 11.3V4.5A1.5 1.5 0 0 0 10.5 3h-1A1.5 1.5 0 0 0 8 4.5v13.2c0 1.2 1.3 1.8 2.3 .9l6.1-5.3z"/></svg>`,
         pel: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 22h20"/><path d="M5 22V6.5c0-.8.7-1.5 1.5-1.5s1.5.7 1.5 1.5V22"/><path d="M12 22V5c0-1.7-1.3-3-3-3s-3 1.3-3 3v17"/><path d="M17 22V9.5c0-.8.7-1.5 1.5-1.5s1.5.7 1.5 1.5V22"/></svg>`,
-        lap: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22h8.5a.5.5 0 0 0 .5-.5V3.5a.5.5 0 0 0-.5-.5H3.5a.5.5 0 0 0-.5.5v12.5c0 .3.2.5.5.5h3"/><path d="m12 16-1-3 4-4 1 3-4 4z"/></svg>`,
-        toilet: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 21v-4H8v-2h2v-2h2v2h2v2h-2v4h-4Z"/><path d="M6 13h12c.5 0 1-.5 1-1V6c0-1-1-2-2-2H7c-1 0-2 1-2 2v6c0 .5.5 1 1 1Z"/></svg>`,
-        mushola: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m2 13 1.8-1.8c.8-.8 2-.8 2.8 0L9.2 14c.8.8 2 .8 2.8 0l2.6-2.6c.8-.8 2-.8 2.8 0L22 13"/><path d="M5.2 9.2c.8-.8 2-.8 2.8 0L10.6 12c.8.8 2 .8 2.8 0l2.6-2.6c.8-.8 2-.8 2.8 0L22 10.8V5c0-1.7-1.3-3-3-3h-1c-1.7 0-3 1.3-3 3v1c0 1.7-1.3 3-3 3h-1c-1.7 0-3-1.3-3-3V5c0-1.7-1.3-3-3-3H4C2.3 2 1 3.3 1 5v5.8"/></svg>`,
-        sampah: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>`,
-        sikat: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9.06 5.06A3 3 0 0 1 12 2a3 3 0 0 1 2.94 3.06"/><path d="M12 2v17a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2V7.83a2 2 0 0 1 .59-1.42L8 5h8l1.41 1.41a2 2 0 0 1 .59 1.42V21a2 2 0 0 1-2 2h-2a2 2 0 0 1-2-2V2z"/><path d="M6 12h12"/></svg>`,
-        wastafel: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3h18v3a1 1 0 0 1-1 1h-4a1 1 0 0 1-1-1V3"/><path d="M12 12H4a2 2 0 0 0-2 2v4a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-4a2 2 0 0 0-2-2h-3"/><path d="M12 12V7a2 2 0 0 1 2-2h0a2 2 0 0 1 2 2v5"/><path d="M12 20v-2"/></svg>`,
-        kursi_bayi: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 12V4a2 2 0 0 0-2-2h-2a2 2 0 0 0-2 2v8"/><path d="M18 12v-2a2 2 0 0 0-2-2h-8a2 2 0 0 0-2 2v2"/><path d="M4 12h16"/><path d="M6 12l.7 6.1a2 2 0 0 0 2 1.9h6.6a2 2 0 0 0 2-1.9L18 12"/><path d="M15 22v-4"/><path d="M9 22v-4"/></svg>`,
-        tisu: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 11h8v1a2 2 0 0 1-2 2h-4a2 2 0 0 1-2-2z"/><path d="M4 6.2C4 5 5 4 6.2 4h11.6C19 4 20 5 20 6.2v10.6c0 1.2-1 2.2-2.2 2.2H6.2C5 19 4 18 4 16.8z"/><path d="M12 4v3"/><path d="M10 4h4"/></svg>`,
-        kasir: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 6h14v2H2z"/><path d="M2 12h14v2H2z"/><path d="M2 18h14v2H2z"/><path d="M18 6h4v14h-4z"/><path d="M20 10h-2"/><path d="M20 14h-2"/></svg>`,
-        isi_ulang: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>`,
-        kotak_nasi: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m7.8 2.2-4.2 4.2C2.6 7.4 2 8.6 2 9.8V17c0 1.7 1.3 3 3 3h14c1.7 0 3-1.3 3-3V9.8c0-1.2-.6-2.4-1.6-3.4L16.2 2.2c-.4-.4-1-.6-1.6-.6H9.4c-.6 0-1.2.2-1.6.6z"/><path d="M2 10h20"/><path d="m16 14-2 2-4-4"/></svg>`,
-        plafon: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20"/><path d="M5 22h14"/><path d="M17.4 8.2a4 4 0 0 1-5.6 0"/><path d="M12 14.5a3 3 0 0 1-3-3"/><path d="m20 11-8 8"/><path d="m4 11 8 8"/></svg>`,
-        ember: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m5 5 1.5 10.5a2.5 2.5 0 0 0 2.5 2h7a2.5 2.5 0 0 0 2.5-2L20 5"/><path d="M5 5h14"/><path d="M15 5a3 3 0 0 0-6 0"/></svg>`,
-        tangga: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 5H2L12 15l10-10z"/><path d="M2 12h20"/><path d="M2 19h20"/></svg>`,
+        lap: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22h8.5a.5.5 0 0 0 .5-.5V3.5a.5.5 0 0 0-.5-.5H3.5a.5.5 0 0 0-.5.5v12.5c0 .3.2.5.5.5h3"/><path d="m12 16-1-3 4-4 1 3-4 4z"/></svg>`,
     };
+
+    // --- FUNGSI BANTUAN ---
     const getIconForTask = (id) => {
         if (id.includes('sapu')) return TASK_ICONS.sapu;
         if (id.includes('pel')) return TASK_ICONS.pel;
         if (id.includes('lap')) return TASK_ICONS.lap;
-        if (id.includes('toilet')) return TASK_ICONS.toilet;
-        if (id.includes('mushola')) return TASK_ICONS.mushola;
-        if (id.includes('sampah')) return TASK_ICONS.sampah;
-        if (id.includes('sikat')) return TASK_ICONS.sikat;
-        if (id.includes('wastafel')) return TASK_ICONS.wastafel;
-        if (id.includes('kursi_bayi')) return TASK_ICONS.kursi_bayi;
-        if (id.includes('tisu')) return TASK_ICONS.tisu;
-        if (id.includes('kasir')) return TASK_ICONS.kasir;
-        if (id.includes('isi_ulang')) return TASK_ICONS.isi_ulang;
-        if (id.includes('kotak_nasi')) return TASK_ICONS.kotak_nasi;
-        if (id.includes('plafon')) return TASK_ICONS.plafon;
-        if (id.includes('ember')) return TASK_ICONS.ember;
-        if (id.includes('tangga')) return TASK_ICONS.tangga;
         return TASK_ICONS.default;
     };
-
     const getTanggalString = (date) => `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
     const showAlert = (message) => {
         document.getElementById('custom-alert-message').textContent = message;
@@ -322,102 +270,99 @@ function createVirtualScroller(container, fullData, renderItemFunction) {
         modal.querySelector('#custom-confirm-ok').onclick = () => { callback(true); modal.classList.add('hidden'); };
         modal.querySelector('#custom-confirm-cancel').onclick = () => { callback(false); modal.classList.add('hidden'); };
     };
+    const addNotificationToList = (message) => {
+        const list = document.getElementById('notification-list');
+        const placeholder = list.querySelector('.text-slate-400');
+        if (placeholder) placeholder.remove();
+        const newItem = document.createElement('p');
+        newItem.className = 'text-sm text-slate-600 bg-slate-50 p-2 rounded-md animate-pulse';
+        newItem.textContent = message;
+        list.prepend(newItem);
+        setTimeout(() => newItem.classList.remove('animate-pulse'), 1000);
+    };
 
-// Ganti fungsi renderChecklistUI Anda dengan yang ini
-const renderChecklistUI = (data) => {
-    const gridContainer = document.getElementById('daftar-tugas-grid');
-    const completedContainer = document.getElementById('tugas-selesai-list');
-    
-    // Kosongkan container sebelum diisi
-    gridContainer.innerHTML = '';
-    completedContainer.innerHTML = ''; // Dikelola oleh virtual scroller
+    // --- FUNGSI INTI ---
+    const renderChecklistUI = (data) => {
+        const gridContainer = document.getElementById('daftar-tugas-grid');
+        const completedContainer = document.getElementById('tugas-selesai-list');
+        gridContainer.innerHTML = '';
+        if (!data || !data.tasks) return;
 
-    let tugasSelesaiCount = 0;
-    if (!data || !data.tasks) return;
+        const allTasks = Object.entries(data.tasks);
+        const totalTugas = allTasks.length;
+        const uncompletedTasks = allTasks.filter(([id, task]) => !task.done);
+        const completedTasks = allTasks.filter(([id, task]) => task.done).map(([id, task]) => ({ id, ...task }));
 
-    const allTasks = Object.entries(data.tasks);
-    const totalTugas = allTasks.length;
+        uncompletedTasks.forEach(([id, task]) => {
+            const card = document.createElement('div');
+            card.className = "task-card bg-white p-4 rounded-2xl shadow-md border border-slate-200 flex flex-col items-center justify-center text-center cursor-pointer aspect-square";
+            card.dataset.taskId = id;
+            card.dataset.taskText = task.text;
+            card.innerHTML = `
+                <div class="text-blue-500 mb-2">${getIconForTask(id)}</div>
+                <p class="font-semibold text-slate-700 leading-tight">${task.text}</p>
+            `;
+            gridContainer.appendChild(card);
+        });
 
-    const uncompletedTasks = [];
-    const completedTasks = [];
-
-    // Pisahkan tugas yang sudah dan belum selesai
-    allTasks.forEach(([id, task]) => {
-        if (task.done) {
-            completedTasks.push({ id, ...task });
-        } else {
-            uncompletedTasks.push({ id, ...task });
-        }
-    });
-
-    // 1. Render tugas yang BELUM selesai (seperti biasa, karena jumlahnya sedikit)
-    uncompletedTasks.forEach(task => {
-        const card = document.createElement('div');
-        card.className = "task-card bg-white p-4 rounded-2xl shadow-md border border-slate-200 flex flex-col items-center justify-center text-center cursor-pointer aspect-square";
-        card.dataset.taskId = task.id;
-        card.dataset.taskText = task.text;
-        card.innerHTML = `
-            <div class="text-blue-500 mb-2">${getIconForTask(task.id)}</div>
-            <p class="font-semibold text-slate-700 leading-tight">${task.text}</p>
-        `;
-        gridContainer.appendChild(card);
-    });
-
-    // 2. Render tugas yang SUDAH selesai MENGGUNAKAN VIRTUAL SCROLLER
-    const renderSingleCompletedItem = (task) => {
-        const staffFeedbackHtml = `
-            ${task.isChecked || task.staffComment ? `
-            <div class="mt-3 pt-3 border-t border-slate-200 space-y-2">
-                ${task.isChecked ? `<div class="flex items-center gap-2 text-sm font-semibold text-green-600 bg-green-50 px-3 py-1.5 rounded-lg"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg><span>Sudah Dicek oleh Staff</span></div>` : ''}
-                ${task.staffComment ? `<div class="text-sm text-slate-600 bg-slate-50 p-3 rounded-lg"><p class="font-semibold mb-1 text-slate-800">Komentar Staff:</p><p class="italic">"${task.staffComment}"</p></div>` : ''}
-            </div>` : ''}
-        `;
-
-        return `
-        <div class="bg-white border border-slate-200 p-4 rounded-xl shadow-sm flex flex-col gap-2">
-            <div class="flex items-center justify-between gap-4">
-                <div class="flex items-center gap-3">
-                    <div class="w-12 h-12 rounded-lg object-cover bg-slate-100 flex items-center justify-center flex-shrink-0">
-                        <img src="${task.proofUrl}" alt="Bukti" class="w-full h-full rounded-lg object-cover cursor-pointer" data-full-src="${task.proofUrl}" loading="lazy">
-                    </div>
+        const renderSingleCompletedItem = (task) => {
+            const staffFeedbackHtml = `
+                ${task.isChecked || task.staffComment ? `
+                <div class="mt-3 pt-3 border-t border-slate-200 space-y-2">
+                    ${task.isChecked ? `<div class="flex items-center gap-2 text-sm font-semibold text-green-600"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg><span>Sudah Dicek</span></div>` : ''}
+                    ${task.staffComment ? `<div class="text-sm text-slate-600 bg-slate-50 p-2 rounded-lg italic">"${task.staffComment}"</div>` : ''}
+                </div>` : ''}
+            `;
+            return `
+            <div class="bg-white border border-slate-200 p-4 rounded-xl shadow-sm">
+                <div class="flex items-center justify-between gap-4">
                     <div>
                         <p class="font-semibold text-slate-800">${task.text}</p>
                         <p class="text-sm text-slate-500">Oleh: ${task.completedBy}</p>
                     </div>
+                    <div class="flex-shrink-0 text-emerald-500">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+                    </div>
                 </div>
-                <div class="flex-shrink-0 text-emerald-500">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
-                </div>
+                ${staffFeedbackHtml}
             </div>
-            ${staffFeedbackHtml}
-        </div>
-        `;
+            `;
+        };
+        createVirtualScroller(completedContainer, completedTasks.sort((a,b) => (a.text > b.text) ? 1 : -1), renderSingleCompletedItem);
+
+        const progress = totalTugas > 0 ? (completedTasks.length / totalTugas) * 100 : 0;
+        document.getElementById('progress-bar').style.width = `${progress}%`;
+        document.getElementById('progress-text').textContent = `${Math.round(progress)}%`;
     };
 
-    createVirtualScroller(completedContainer, completedTasks, renderSingleCompletedItem);
-
-    // 3. Update progress bar
-    tugasSelesaiCount = completedTasks.length;
-    const progress = totalTugas > 0 ? (tugasSelesaiCount / totalTugas) * 100 : 0;
-    document.getElementById('progress-bar').style.width = `${progress}%`;
-    document.getElementById('progress-text').textContent = `${Math.round(progress)}%`;
-};
-
-    
-    const archiveChecklist = async (date) => {
-        const dateStr = getTanggalString(date);
-        const dailyDocRef = doc(db, 'checklist_harian', dateStr);
-        const docSnap = await getDoc(dailyDocRef);
-        if (docSnap.exists()) {
-            const data = docSnap.data();
-            const tasksArray = Object.values(data.tasks);
-            if (tasksArray.some(task => task.done)) {
-                const historyDocRef = doc(db, 'checklist_history', dateStr);
-                await setDoc(historyDocRef, { tanggal: Timestamp.fromDate(date), tasks: data.tasks });
-                return `Laporan ${dateStr} berhasil diarsipkan.`;
-            }
+    const handleFormSubmit = async (e) => {
+        e.preventDefault();
+        const form = e.target;
+        const taskId = form.querySelector('#task-modal-id').value;
+        const namaPengerja = form.querySelector('input[name="namaPengerja"]').value.trim();
+        if (!namaPengerja) {
+            showAlert("Nama harus diisi.");
+            return;
         }
-        return `Tidak ada pekerjaan yang selesai pada ${dateStr} untuk diarsipkan.`;
+        const submitButton = form.querySelector('button[type="submit"]');
+        submitButton.disabled = true;
+        submitButton.textContent = 'Menyimpan...';
+        try {
+            const todayStr = getTanggalString(new Date());
+            const dailyDocRef = doc(db, 'checklist_harian', todayStr);
+            await updateDoc(dailyDocRef, {
+                [`tasks.${taskId}.done`]: true,
+                [`tasks.${taskId}.completedBy`]: namaPengerja,
+                [`tasks.${taskId}.proofUrl`]: null
+            });
+            document.getElementById('task-modal').classList.add('hidden', 'opacity-0');
+        } catch (error) {
+            showAlert("Gagal menyimpan. Coba lagi.");
+        } finally {
+             submitButton.disabled = false;
+             submitButton.innerHTML = "Kerjakan";
+             form.reset();
+        }
     };
 
     const createTodayChecklist = async (todayStr) => {
@@ -429,43 +374,19 @@ const renderChecklistUI = (data) => {
         await setDoc(todayDocRef, { tanggal: todayStr, tasks });
     };
 
-    const handleFormSubmit = async (e) => {
-        e.preventDefault();
-        const form = e.target;
-        const taskId = form.querySelector('#task-modal-id').value;
-        const namaPengerja = form.querySelector('input[name="namaPengerja"]').value.trim();
-        const file = form.querySelector('input[name="fileBukti"]').files[0];
-        if (!namaPengerja || !file) {
-            showAlert("Nama dan foto bukti harus diisi.");
-            return;
+    const archiveChecklist = async (date) => {
+        const dateStr = getTanggalString(date);
+        const dailyDocRef = doc(db, 'checklist_harian', dateStr);
+        const docSnap = await getDoc(dailyDocRef);
+        if (docSnap.exists() && docSnap.data().tasks) {
+            const data = docSnap.data();
+            if (Object.values(data.tasks).some(task => task.done)) {
+                const historyDocRef = doc(db, 'checklist_history', dateStr);
+                await setDoc(historyDocRef, { tanggal: Timestamp.fromDate(date), tasks: data.tasks });
+                return `Laporan ${dateStr} berhasil diarsipkan.`;
+            }
         }
-
-        const submitButton = form.querySelector('button[type="submit"]');
-        submitButton.disabled = true;
-        submitButton.innerHTML = `<svg class="animate-spin mx-auto h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>`;
-        const formData = new FormData();
-        formData.append('file', file);
-        formData.append('upload_preset', CLOUDINARY_UPLOAD_PRESET);
-        try {
-            const response = await fetch(CLOUDINARY_API_URL, { method: 'POST', body: formData });
-            if (!response.ok) throw new Error('Gagal unggah ke Cloudinary.');
-            const data = await response.json();
-            const todayStr = getTanggalString(new Date());
-            const dailyDocRef = doc(db, 'checklist_harian', todayStr);
-            await updateDoc(dailyDocRef, {
-                [`tasks.${taskId}.done`]: true,
-                [`tasks.${taskId}.proofUrl`]: data.secure_url,
-                [`tasks.${taskId}.completedBy`]: namaPengerja
-            });
-            document.getElementById('task-modal').classList.add('hidden', 'opacity-0');
-        } catch (error) {
-            showAlert("Gagal mengunggah bukti. Coba lagi.");
-        } finally {
-             submitButton.disabled = false;
-             submitButton.innerHTML = "Kirim Bukti";
-             form.reset();
-             document.getElementById('file-name-display').textContent = '';
-        }
+        return `Tidak ada pekerjaan yang selesai pada ${dateStr} untuk diarsipkan.`;
     };
 
     const fetchAndDisplayHistory = async (dateStr) => {
@@ -475,8 +396,9 @@ const renderChecklistUI = (data) => {
         }
         isViewingHistory = true;
         loadingOverlay.style.display = 'flex';
-        mainTitle.textContent = `Laporan ${new Date(dateStr.replace(/-/g, '/')).toLocaleDateString('id-ID', {day: 'numeric', month: 'long', year: 'numeric'})}`;
-        tugasTitle.textContent = "Tugas yang Belum Selesai";
+        const displayDate = new Date(dateStr.replace(/-/g, '/')).toLocaleDateString('id-ID', {day: 'numeric', month: 'long', year: 'numeric'});
+        mainTitle.textContent = `Laporan ${displayDate}`;
+        tugasTitle.textContent = "Tugas Selesai pada Tanggal Ini";
         viewHistoryBtn.classList.add('hidden');
         backToTodayBtn.classList.remove('hidden');
         archiveBtnContainer.classList.add('hidden');
@@ -493,13 +415,9 @@ const renderChecklistUI = (data) => {
         loadingOverlay.style.display = 'none';
     };
     
-    // ===========================================
-    // BAGIAN 2: FUNGSI UNTUK RANKING
-    // ===========================================
-    const rankingListContainer = document.getElementById('ranking-list');
-    const rankingLoadingOverlay = document.getElementById('ranking-loading-overlay');
-
     const getRankingData = async (days) => {
+        const rankingListContainer = document.getElementById('ranking-list');
+        const rankingLoadingOverlay = document.getElementById('ranking-loading-overlay');
         rankingLoadingOverlay.style.display = 'flex';
         rankingListContainer.innerHTML = '';
         const userScores = {};
@@ -527,7 +445,6 @@ const renderChecklistUI = (data) => {
                 .sort((a, b) => b.score - a.score);
             renderRanking(sortedUsers);
         } catch (error) {
-            console.error("Gagal mengambil data ranking:", error);
             rankingListContainer.innerHTML = `<p class="text-center text-red-500">Gagal memuat data.</p>`;
         } finally {
             rankingLoadingOverlay.style.display = 'none';
@@ -535,6 +452,7 @@ const renderChecklistUI = (data) => {
     };
 
     const renderRanking = (sortedUsers) => {
+        const rankingListContainer = document.getElementById('ranking-list');
         rankingListContainer.innerHTML = '';
         if (sortedUsers.length === 0) {
             rankingListContainer.innerHTML = `<p class="text-center text-slate-500 bg-white p-6 rounded-lg shadow-sm">Belum ada data untuk ditampilkan.</p>`;
@@ -558,9 +476,7 @@ const renderChecklistUI = (data) => {
         });
     };
 
-    // ===========================================
-    // BAGIAN 3: EVENT LISTENERS UTAMA
-    // ===========================================
+    // --- EVENT LISTENER UTAMA ---
     document.addEventListener('DOMContentLoaded', async () => {
         const todayStr = getTanggalString(new Date());
         document.getElementById('tanggal-hari-ini').textContent = new Date().toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
@@ -568,6 +484,7 @@ const renderChecklistUI = (data) => {
         try {
             await signInAnonymously(auth);
             const dailyDocRef = doc(db, 'checklist_harian', todayStr);
+
             onSnapshot(dailyDocRef, async (doc) => {
                 if (!isViewingHistory) { 
                     if (!doc.exists()) {
@@ -576,7 +493,25 @@ const renderChecklistUI = (data) => {
                         await archiveChecklist(yesterday);
                         await createTodayChecklist(todayStr);
                     } else {
-                        renderChecklistUI(doc.data());
+                        const newData = doc.data();
+                        const newTasks = newData.tasks || {};
+
+                        Object.keys(newTasks).forEach(taskId => {
+                            const oldTask = currentTasks[taskId];
+                            const newTask = newTasks[taskId];
+
+                            if (oldTask) {
+                                if (!oldTask.isChecked && newTask.isChecked) {
+                                    addNotificationToList(`✅ Tugas "${newTask.text}" telah dicek.`);
+                                }
+                                if (oldTask.staffComment !== newTask.staffComment && newTask.staffComment) {
+                                   addNotificationToList(`💬 Komentar baru untuk "${newTask.text}".`);
+                                }
+                            }
+                        });
+                        
+                        currentTasks = newTasks;
+                        renderChecklistUI(newData);
                     }
                     loadingOverlay.style.display = 'none';
                 }
@@ -587,18 +522,46 @@ const renderChecklistUI = (data) => {
             loadingOverlay.innerHTML = '<p class="text-red-500 font-semibold">Gagal memuat aplikasi.</p>';
         }
 
-        // --- Listener untuk navigasi ---
+        document.getElementById('daftar-tugas-grid').addEventListener('click', (e) => {
+            const card = e.target.closest('.task-card');
+            if (card) {
+                const modal = document.getElementById('task-modal');
+                modal.querySelector('#task-modal-title').textContent = card.dataset.taskText;
+                modal.querySelector('#task-modal-id').value = card.dataset.taskId;
+                modal.classList.remove('hidden', 'opacity-0');
+            }
+        });
+        
+        document.getElementById('task-action-form').addEventListener('submit', handleFormSubmit);
+        document.getElementById('task-modal-cancel').addEventListener('click', () => {
+             document.getElementById('task-modal').classList.add('hidden', 'opacity-0');
+             document.getElementById('task-action-form').reset();
+        });
+
+        document.getElementById('archive-now-btn').addEventListener('click', () => {
+            showConfirm("Anda yakin ingin menyelesaikan dan mengarsipkan laporan hari ini?", async (confirmed) => {
+                if (confirmed) {
+                    loadingOverlay.style.display = 'flex';
+                    const message = await archiveChecklist(new Date());
+                    showAlert(message);
+                    loadingOverlay.style.display = 'none';
+                }
+            });
+        });
+
+        document.getElementById('custom-alert-close').addEventListener('click', () => document.getElementById('custom-alert').classList.add('hidden'));
+
         document.getElementById('show-ranking-btn').addEventListener('click', () => {
             checklistView.classList.add('hidden');
             rankingView.classList.remove('hidden');
             document.querySelector('.filter-btn[data-range="7"]').click();
         });
+
         document.getElementById('back-to-checklist-btn').addEventListener('click', () => {
             rankingView.classList.add('hidden');
             checklistView.classList.remove('hidden');
         });
         
-        // --- Listener untuk filter ranking ---
         document.querySelectorAll('.filter-btn').forEach(button => {
             button.addEventListener('click', () => {
                 document.querySelectorAll('.filter-btn').forEach(btn => {
@@ -610,76 +573,11 @@ const renderChecklistUI = (data) => {
                 getRankingData(parseInt(button.dataset.range, 10));
             });
         });
-        
-        // --- Listener untuk fitur checklist ---
-        document.getElementById('daftar-tugas-grid').addEventListener('click', (e) => {
-            const card = e.target.closest('.task-card');
-            if (card) {
-                const modal = document.getElementById('task-modal');
-                modal.querySelector('#task-modal-title').textContent = card.dataset.taskText;
-                modal.querySelector('#task-modal-id').value = card.dataset.taskId;
-                modal.classList.remove('hidden', 'opacity-0');
-            }
-        });
-        document.getElementById('tugas-selesai-list').addEventListener('click', (e) => {
-             const thumbnail = e.target.closest('img[data-full-src]');
-             if (thumbnail) {
-                document.getElementById('modal-image-content').src = thumbnail.dataset.fullSrc;
-                const modal = document.getElementById('image-modal');
-                modal.classList.remove('hidden', 'opacity-0');
-             }
-        });
 
-        document.getElementById('task-action-form').addEventListener('submit', handleFormSubmit);
-        document.getElementById('task-modal-cancel').addEventListener('click', () => {
-             const modal = document.getElementById('task-modal');
-             modal.classList.add('hidden', 'opacity-0');
-             document.getElementById('task-action-form').reset();
-             document.getElementById('file-name-display').textContent = '';
-        });
-        document.getElementById('archive-now-btn').addEventListener('click', () => {
-            showConfirm("Anda yakin ingin menyelesaikan dan mengarsipkan laporan hari ini?", async (confirmed) => {
-                if (confirmed) {
-                    loadingOverlay.style.display = 'flex';
-                    const message = await archiveChecklist(new Date());
-                    showAlert(message);
-                    loadingOverlay.style.display = 'none';
-                }
-            });
-        });
-        document.getElementById('custom-alert-close').addEventListener('click', () => document.getElementById('custom-alert').classList.add('hidden'));
-
-        const fileInput = document.getElementById('file-input');
-        const uploadBtn = document.getElementById('upload-btn');
-        const fileNameDisplay = document.getElementById('file-name-display');
-        uploadBtn.addEventListener('click', () => fileInput.click());
-        fileInput.addEventListener('change', (e) => {
-            const file = e.target.files[0];
-            fileNameDisplay.textContent = file ? `File: ${file.name}` : '';
-        });
-        const searchInput = document.getElementById('search-input');
-        const noResultsMessage = document.getElementById('no-results-message');
-        searchInput.addEventListener('input', () => {
-            const searchTerm = searchInput.value.toLowerCase().trim();
-            let resultsFound = 0;
-            document.querySelectorAll('#daftar-tugas-grid .task-card').forEach(card => {
-                const isVisible = card.dataset.taskText.toLowerCase().includes(searchTerm);
-                card.style.display = isVisible ? 'flex' : 'none';
-                if(isVisible) resultsFound++;
-            });
-            document.querySelectorAll('#tugas-selesai-list .bg-white').forEach(item => {
-                const isVisible = item.querySelector('.font-semibold').textContent.toLowerCase().includes(searchTerm);
-                item.style.display = isVisible ? 'flex' : 'none';
-                if(isVisible) resultsFound++;
-            });
-            noResultsMessage.classList.toggle('hidden', resultsFound > 0 || searchTerm === '');
-        });
-
-        // --- Listener untuk fitur riwayat ---
         viewHistoryBtn.addEventListener('click', () => {
-            const selectedDate = historyDateInput.value;
-            fetchAndDisplayHistory(selectedDate);
+            fetchAndDisplayHistory(historyDateInput.value);
         });
+
         backToTodayBtn.addEventListener('click', () => {
             isViewingHistory = false;
             loadingOverlay.style.display = 'flex';
@@ -689,14 +587,35 @@ const renderChecklistUI = (data) => {
             backToTodayBtn.classList.add('hidden');
             archiveBtnContainer.classList.remove('hidden');
             historyDateInput.value = '';
+            
             const todayStr = getTanggalString(new Date());
             const dailyDocRef = doc(db, 'checklist_harian', todayStr);
             getDoc(dailyDocRef).then(docSnap => {
                 if (docSnap.exists()) {
+                    currentTasks = docSnap.data().tasks || {};
                     renderChecklistUI(docSnap.data());
                 }
+                loadingOverlay.style.display = 'none';
             });
-            loadingOverlay.style.display = 'none';
+        });
+
+        document.getElementById('search-input').addEventListener('input', (e) => {
+            const searchTerm = e.target.value.toLowerCase().trim();
+            let resultsFound = 0;
+            document.querySelectorAll('#daftar-tugas-grid .task-card').forEach(card => {
+                const isVisible = card.dataset.taskText.toLowerCase().includes(searchTerm);
+                card.style.display = isVisible ? 'flex' : 'none';
+                if(isVisible) resultsFound++;
+            });
+            document.querySelectorAll('#tugas-selesai-list > div > div').forEach(item => {
+                 const textElement = item.querySelector('.font-semibold');
+                 if(textElement) {
+                    const isVisible = textElement.textContent.toLowerCase().includes(searchTerm);
+                    item.parentElement.style.display = isVisible ? 'block' : 'none';
+                    if(isVisible) resultsFound++;
+                 }
+            });
+            document.getElementById('no-results-message').classList.toggle('hidden', resultsFound > 0 || searchTerm === '');
         });
     });
 </script>
